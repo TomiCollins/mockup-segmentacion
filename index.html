@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mockup - Segmentación de Productores</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { background: #f0f2f5; color: #1f2937; }
+  
+  .header { background: linear-gradient(90deg, #1e3a8a, #2563eb); color: white; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header .meta { font-size: 12px; opacity: 0.85; }
+  
+  .tabs { display: flex; background: white; border-bottom: 1px solid #e5e7eb; padding: 0 24px; flex-wrap: wrap; }
+  .tab { padding: 12px 18px; cursor: pointer; font-size: 13px; font-weight: 500; color: #6b7280; border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; }
+  .tab:hover { color: #2563eb; }
+  .tab.active { color: #1e3a8a; border-bottom-color: #2563eb; }
+  
+  .container { display: flex; min-height: calc(100vh - 100px); }
+  .sidebar { width: 210px; min-width: 210px; background: white; padding: 20px; border-right: 1px solid #e5e7eb; }
+  .sidebar h3 { font-size: 11px; text-transform: uppercase; color: #6b7280; margin-bottom: 12px; letter-spacing: 0.5px; }
+  .filter { margin-bottom: 14px; }
+  .filter label { display: block; font-size: 12px; color: #374151; margin-bottom: 4px; font-weight: 500; }
+  .filter select, .filter input { width: 100%; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; }
+  
+  .main { flex: 1; padding: 20px; overflow-x: auto; }
+  
+  .kpi-row { display: grid; gap: 12px; margin-bottom: 20px; }
+  .kpi { background: white; padding: 14px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 4px solid #2563eb; }
+  .kpi.green { border-left-color: #10b981; }
+  .kpi.amber { border-left-color: #f59e0b; }
+  .kpi.red { border-left-color: #ef4444; }
+  .kpi.purple { border-left-color: #8b5cf6; }
+  .kpi.dark { border-left-color: #1f2937; }
+  .kpi.gold { border-left-color: #d97706; }
+  .kpi.silver { border-left-color: #64748b; }
+  .kpi .label { font-size: 11px; color: #6b7280; margin-bottom: 4px; }
+  .kpi .value { font-size: 20px; font-weight: 700; color: #1f2937; }
+  .kpi .delta { font-size: 11px; color: #10b981; margin-top: 2px; }
+  .kpi .movs { display:flex; gap:12px; align-items:center; margin-top:4px;}
+  .kpi .movs .up { color:#10b981; font-weight:700; font-size:16px;}
+  .kpi .movs .down { color:#ef4444; font-weight:700; font-size:16px;}
+  .kpi .movs .same { color:#6b7280; font-weight:700; font-size:16px;}
+  .kpi .movs small { font-size:10px; color:#6b7280; display:block;}
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .card { background: white; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .card h3 { font-size: 13px; color: #374151; margin-bottom: 12px; font-weight: 600; }
+  .card .subtitle { font-size: 11px; color: #6b7280; margin-bottom: 12px; margin-top: -8px; }
+
+  .donut { width: 130px; height: 130px; border-radius: 50%; background: conic-gradient(#94a3b8 0 45%, #2563eb 45% 80%, #f59e0b 80% 100%); margin: 8px auto; position: relative; }
+  .donut::after { content: '1.240'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 75px; height: 75px; background: white; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+  .legend { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; font-size: 11px; margin-top: 6px;}
+  .legend span { display: flex; align-items: center; gap: 4px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .bar-chart-h { display: flex; flex-direction: column; gap: 8px; }
+  .bar-h-row { display: flex; align-items: center; gap: 8px; }
+  .bar-h-label { width: 85px; font-size: 11px; color: #374151; text-align: right; flex-shrink: 0; }
+  .bar-h-track { flex: 1; height: 20px; background: #f3f4f6; border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-h-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 600; color: white; }
+  .bar-h-val { font-size: 11px; font-weight: 700; color: #374151; width: 50px; flex-shrink: 0; }
+
+  /* Stacked horizontal bars */
+  .stacked-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .stacked-label { width: 90px; font-size: 11px; color: #374151; text-align: right; flex-shrink: 0; }
+  .stacked-track { flex: 1; height: 28px; background: #f3f4f6; border-radius: 4px; overflow: hidden; display: flex; }
+  .stacked-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: white; }
+  .stacked-val { font-size: 11px; font-weight: 700; color: #374151; width: 40px; flex-shrink: 0; }
+
+  /* Scatter */
+  .scatter { position: relative; height: 260px; background: #fafafa; border-left: 2px solid #9ca3af; border-bottom: 2px solid #9ca3af; margin: 10px 40px 30px 55px; }
+  .scatter .quadrant-label { position:absolute; font-size:9px; color:#9ca3af; font-weight:600; text-transform:uppercase; line-height:1.3; }
+  .scatter .vline { position:absolute; left:50%; top:0; bottom:0; border-left: 1px dashed #d1d5db; }
+  .scatter .hline { position:absolute; top:50%; left:0; right:0; border-top: 1px dashed #d1d5db; }
+  .dot { position:absolute; width:11px; height:11px; border-radius:50%; transform:translate(-50%,-50%); border:2px solid white; box-shadow:0 1px 3px rgba(0,0,0,0.2); cursor:pointer; }
+  .dot.regular { background:#94a3b8; }
+  .dot.premium { background:#2563eb; }
+  .dot.super { background:#f59e0b; }
+  .axis-y-label { position:absolute; left:-50px; top:50%; transform:rotate(-90deg) translateX(50%); font-size:10px; font-weight:600; color:#374151; white-space:nowrap;}
+  .axis-x-label { position:absolute; bottom:-24px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:600; color:#374151; white-space:nowrap;}
+
+  /* Spider / Radar */
+  .spider-container { position: relative; width: 220px; height: 220px; margin: 0 auto; }
+  .spider-bg { position: absolute; inset: 0; }
+  .spider-bg circle { fill: none; stroke: #e5e7eb; stroke-width: 1; }
+  .spider-bg line { stroke: #e5e7eb; stroke-width: 0.5; }
+  .spider-area { fill: rgba(37,99,235,0.25); stroke: #2563eb; stroke-width: 2; }
+  .spider-area-2 { fill: rgba(239,68,68,0.1); stroke: #ef4444; stroke-width: 1.5; stroke-dasharray: 4 2; }
+  .spider-area-3 { fill: rgba(16,185,129,0.1); stroke: #10b981; stroke-width: 1.5; stroke-dasharray: 4 2; }
+  .spider-label { font-size: 9px; fill: #374151; font-weight: 600; }
+
+  /* Line chart */
+  .line-chart { position: relative; height: 140px; border-bottom: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; margin: 10px 10px 25px 35px; }
+  .line-chart .y-label { position: absolute; left: -32px; font-size: 9px; color: #6b7280; }
+  .line-chart .x-labels { position: absolute; bottom: -20px; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 9px; color: #6b7280; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: #f9fafb; padding: 7px 6px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; font-size: 10px; text-transform: uppercase; }
+  td { padding: 7px 6px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  tr:hover { background: #f9fafb; }
+
+  .badge { padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; display: inline-block; }
+  .badge.regular { background: #e5e7eb; color: #374151; }
+  .badge.premium { background: #dbeafe; color: #1e40af; }
+  .badge.super { background: #fef3c7; color: #92400e; }
+  .badge.up { background: #d1fae5; color: #065f46; }
+  .badge.down { background: #fee2e2; color: #991b1b; }
+  .badge.same { background: #f3f4f6; color: #4b5563; }
+  .badge.alta { background: #d1fae5; color: #065f46; border:1px solid #10b981; }
+  .badge.mantener { background: #dbeafe; color: #1e40af; border:1px solid #2563eb; }
+  .badge.baja { background: #fee2e2; color: #991b1b; border:1px solid #ef4444; }
+  .badge.digital { background: #ede9fe; color: #5b21b6; }
+  .badge.desarr { background: #d1fae5; color: #065f46; }
+  .badge.adesarr { background: #fef3c7; color: #92400e; }
+  .badge.trans { background: #fee2e2; color: #991b1b; }
+
+  .toggle-pills { display:inline-flex; background:#f3f4f6; border-radius:8px; padding:4px; gap:4px; flex-wrap:wrap; }
+  .pill { padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; color:#6b7280; border:none; background:transparent;}
+  .pill.active { background:white; color:#1e3a8a; box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+
+  .quota-bar { height: 20px; background: #e5e7eb; border-radius: 10px; overflow: hidden; margin: 5px 0; }
+  .quota-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #1e40af); display:flex; align-items:center; padding-left:8px; color:white; font-size:10px; font-weight:600;}
+
+  .prog-card { border-radius: 8px; padding: 14px; color: white; }
+  .prog-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .prog-card .pct { font-size: 24px; font-weight: 800; }
+  .prog-card .sub { font-size: 11px; opacity: 0.85; }
+  .prog-bar-track { height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .prog-bar-fill { height: 100%; background: white; border-radius: 4px; }
+
+  .opp-select { padding: 10px 14px; border: 2px solid #2563eb; border-radius: 8px; font-size: 13px; font-weight: 600; color: #1e3a8a; background: white; cursor: pointer; width: 100%; max-width: 320px; }
+  .recommendation { background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px; border-radius: 6px; font-size: 13px; color: #065f46; margin-top: 12px;}
+  .search-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap:wrap; }
+  .search-bar input { flex:1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; min-width:200px; }
+  .btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;}
+  .btn.green { background: #10b981; }
+  .hidden { display: none; }
+  .mb16 { margin-bottom: 16px; }
+  .mb8 { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌽 Segmentación de Productores · Squad Norte</h1>
+  <div class="meta">📅 Actualizado: 30/04/2026 · Campaña 2026/27</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0,this)">📊 Resumen Ejecutivo</div>
+  <div class="tab" onclick="showTab(1,this)">🌐 Negocios Digitales</div>
+  <div class="tab" onclick="showTab(2,this)">🔄 Migración & Priorización</div>
+  <div class="tab" onclick="showTab(3,this)">👤 Vista Cliente 360°</div>
+  <div class="tab" onclick="showTab(4,this)">📋 Tabla Cruda</div>
+</div>
+
+<div class="container">
+  <aside class="sidebar">
+    <h3>Filtros Globales</h3>
+    <div class="filter"><label>Squad</label><select><option>Todos</option><option>Norte</option><option>Sur</option></select></div>
+    <div class="filter"><label>Zona</label><select><option>Todas</option></select></div>
+    <div class="filter"><label>Vendedor (TSR)</label><select><option>Todos</option></select></div>
+    <div class="filter"><label>Canal Actual</label><select><option>Todos</option><option>Innoba</option><option>Premium</option><option>Super Premium</option></select></div>
+    <div class="filter"><label>Canal Futuro</label><select><option>Todos</option><option>Innoba</option><option>Premium</option><option>Super Premium</option></select></div>
+    <div class="filter"><label>Ability to Win</label><select><option>Todos</option><option>Desarrollado</option><option>A desarrollar</option><option>Transaccional</option></select></div>
+    <div class="filter"><label>Negocio Digital</label><select><option>Todos</option><option>FieldView</option><option>ProCarbono</option><option>DK Integrado</option><option>Garantía Xpro</option></select></div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===================== TAB 1: RESUMEN EJECUTIVO ===================== -->
+    <section class="tab-content">
+
+      <!-- Fila 1: Donut + Tabla | Barras apiladas + tarjetas -->
+      <div class="grid-2 mb16">
+        <div class="card">
+          <h3>📊 Distribución por Canal Actual</h3>
+          <div class="donut"></div>
+          <div class="legend">
+            <span><i style="background:#94a3b8"></i>Innoba (45%)</span>
+            <span><i style="background:#2563eb"></i>Premium (35%)</span>
+            <span><i style="background:#f59e0b"></i>Super Premium (20%)</span>
+          </div>
+          <table style="margin-top:14px;">
+            <tr><th>Segmento</th><th>Clientes</th><th>GS</th><th>Potencial</th><th>GAP</th></tr>
+            <tr><td><span class="badge super">Super Premium</span></td><td>248</td><td>$3.8M</td><td>$4.5M</td><td>$0.7M</td></tr>
+            <tr><td><span class="badge premium">Premium</span></td><td>434</td><td>$3.2M</td><td>$5.8M</td><td>$2.6M</td></tr>
+            <tr><td><span class="badge regular">Innoba</span></td><td>558</td><td>$1.4M</td><td>$3.9M</td><td>$2.5M</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>📊 Clientes por Ability to Win y Segmento</h3>
+          <p class="subtitle">Barras apiladas: composición de cada categoría AtW</p>
+          <div style="margin-bottom:14px;">
+            <div class="stacked-bar-row">
+              <div class="stacked-label">Desarrollado</div>
+              <div class="stacked-track">
+                <div class="stacked-seg" style="width:20%; background:#f59e0b;">50</div>
+                <div class="stacked-seg" style="width:35%; background:#2563eb;">88</div>
+                <div class="stacked-seg" style="width:45%; background:#94a3b8;">112</div>
+              </div>
+              <div class="stacked-val">250</div>
+            </div>
+            <div class="stacked-bar-row">
+              <div class="stacked-label">A desarrollar</div>
+              <div class="stacked-track">
+                <div class="stacked-seg" style="width:22%; background:#f59e0b;">110</div>
+                <div class="stacked-seg" style="width:40%; background:#2563eb;">200</div>
+                <div class="stacked-seg" style="width:38%; background:#94a3b8;">190</div>
+              </div>
+              <div class="stacked-val">500</div>
+            </div>
+            <div class="stacked-bar-row">
+              <div class="stacked-label">Transaccional</div>
+              <div class="stacked-track">
+                <div class="stacked-seg" style="width:18%; background:#f59e0b;">88</div>
+                <div class="stacked-seg" style="width:30%; background:#2563eb;">146</div>
+                <div class="stacked-seg" style="width:52%; background:#94a3b8;">256</div>
+              </div>
+              <div class="stacked-val">490</div>
+            </div>
+          </div>
+          <div class="legend mb8">
+            <span><i style="background:#f59e0b"></i>Super Premium</span>
+            <span><i style="background:#2563eb"></i>Premium</span>
+            <span><i style="background:#94a3b8"></i>Innoba</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+            <div class="kpi gold" style="padding:10px;">
+              <div class="label">Potenciales Super Premium</div>
+              <div class="movs"><div><span class="up">↑ 38</span><small>Alta</small></div><div><span class="down">↓ 12</span><small>Baja</small></div></div>
+            </div>
+            <div class="kpi" style="border-left-color:#2563eb; padding:10px;">
+              <div class="label">Potenciales Premium</div>
+              <div class="movs"><div><span class="up">↑ 92</span><small>Alta</small></div><div><span class="down">↓ 23</span><small>Baja</small></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: Maíz | CP | CSS + Upselling -->
+      <div class="grid-3 mb16">
+        <div class="card">
+          <h3>🌽 Maíz — Fact. Acumulada (bolsas)</h3>
+          <div class="bar-chart-h">
+            <div class="bar-h-row"><div class="bar-h-label">Innoba</div><div class="bar-h-track"><div class="bar-h-fill" style="width:38%; background:#94a3b8;">45.6k</div></div><div class="bar-h-val">45.6k</div></div>
+            <div class="bar-h-row"><div class="bar-h-label">Premium</div><div class="bar-h-track"><div class="bar-h-fill" style="width:62%; background:#2563eb;">74.4k</div></div><div class="bar-h-val">74.4k</div></div>
+            <div class="bar-h-row"><div class="bar-h-label">Super Prem.</div><div class="bar-h-track"><div class="bar-h-fill" style="width:82%; background:#f59e0b;">98.4k</div></div><div class="bar-h-val">98.4k</div></div>
+          </div>
+          <div style="margin-top:10px; padding-top:8px; border-top:1px solid #f3f4f6; font-size:12px; display:flex; justify-content:space-between;"><span style="color:#6b7280;">Total</span><b>218.4k bolsas</b></div>
+        </div>
+
+        <div class="card">
+          <h3>🌿 CP — Fact. Acumulada (USD)</h3>
+          <div class="bar-chart-h">
+            <div class="bar-h-row"><div class="bar-h-label">Innoba</div><div class="bar-h-track"><div class="bar-h-fill" style="width:28%; background:#94a3b8;">$0.9M</div></div><div class="bar-h-val">$0.9M</div></div>
+            <div class="bar-h-row"><div class="bar-h-label">Premium</div><div class="bar-h-track"><div class="bar-h-fill" style="width:58%; background:#2563eb;">$2.0M</div></div><div class="bar-h-val">$2.0M</div></div>
+            <div class="bar-h-row"><div class="bar-h-label">Super Prem.</div><div class="bar-h-track"><div class="bar-h-fill" style="width:88%; background:#f59e0b;">$3.1M</div></div><div class="bar-h-val">$3.1M</div></div>
+          </div>
+          <div style="margin-top:10px; padding-top:8px; border-top:1px solid #f3f4f6; font-size:12px; display:flex; justify-content:space-between;"><span style="color:#6b7280;">Total</span><b>$6.0M</b></div>
+        </div>
+
+        <div class="card">
+          <h3>🔗 CSS por Segmento</h3>
+          <p class="subtitle">Crosselling Maíz-Adengo</p>
+          <div class="bar-chart-h" style="margin-bottom:14px;">
+            <div class="bar-h-row"><div class="bar-h-label">Innoba</div><div class="bar-h-track"><div class="bar-h-fill" style="width:38%; background:linear-gradient(90deg,#94a3b8,#64748b);">38%</div></div><div class="bar-h-val">38%</div></div>
+            <div class="bar-h-row"><div class="bar-h-label">Premium</div><div class="bar-h-track"><div class="bar-h-fill" style="width:62%; background:linear-gradient(90deg,#3b82f6,#1e40af);">62%</div></div><div class="bar-h-val">62%</div></div>
+            <div class="bar-h-row"><div class="bar-h-label">Super Prem.</div><div class="bar-h-track"><div class="bar-h-fill" style="width:81%; background:linear-gradient(90deg,#f59e0b,#b45309);">81%</div></div><div class="bar-h-val">81%</div></div>
+          </div>
+          <h3 style="margin-top:6px;">💰 Upselling CP (USD)</h3>
+          <p class="subtitle">vs. año anterior</p>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">
+            <div style="background:#f0fdf4; border-radius:6px; padding:8px; text-align:center;"><div style="font-size:9px; color:#6b7280;">Innoba</div><div style="font-size:16px; font-weight:700; color:#059669;">$124k</div></div>
+            <div style="background:#eff6ff; border-radius:6px; padding:8px; text-align:center;"><div style="font-size:9px; color:#6b7280;">Premium</div><div style="font-size:16px; font-weight:700; color:#1d4ed8;">$380k</div></div>
+            <div style="background:#fffbeb; border-radius:6px; padding:8px; text-align:center;"><div style="font-size:9px; color:#6b7280;">Super P.</div><div style="font-size:16px; font-weight:700; color:#b45309;">$610k</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: Evolución CS Maíz | Evolución CS CP -->
+      <div class="grid-2 mb16">
+        <div class="card">
+          <h3>📈 Evolución Customer Share Maíz (últimos 4 años)</h3>
+          <div class="line-chart">
+            <div class="y-label" style="top:0;">80%</div>
+            <div class="y-label" style="top:50%;">40%</div>
+            <div class="y-label" style="bottom:0;">0%</div>
+            <svg width="100%" height="100%" viewBox="0 0 400 140" preserveAspectRatio="none" style="position:absolute; inset:0;">
+              <!-- Super Premium -->
+              <polyline points="0,50 133,42 266,35 400,25" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+              <!-- Premium -->
+              <polyline points="0,80 133,72 266,62 400,55" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+              <!-- Innoba -->
+              <polyline points="0,110 133,105 266,98 400,92" fill="none" stroke="#94a3b8" stroke-width="2.5"/>
+              <!-- dots -->
+              <circle cx="0" cy="50" r="4" fill="#f59e0b"/><circle cx="133" cy="42" r="4" fill="#f59e0b"/><circle cx="266" cy="35" r="4" fill="#f59e0b"/><circle cx="400" cy="25" r="4" fill="#f59e0b"/>
+              <circle cx="0" cy="80" r="4" fill="#2563eb"/><circle cx="133" cy="72" r="4" fill="#2563eb"/><circle cx="266" cy="62" r="4" fill="#2563eb"/><circle cx="400" cy="55" r="4" fill="#2563eb"/>
+              <circle cx="0" cy="110" r="4" fill="#94a3b8"/><circle cx="133" cy="105" r="4" fill="#94a3b8"/><circle cx="266" cy="98" r="4" fill="#94a3b8"/><circle cx="400" cy="92" r="4" fill="#94a3b8"/>
+            </svg>
+            <div class="x-labels"><span>22/23</span><span>23/24</span><span>24/25</span><span>25/26</span></div>
+          </div>
+          <div class="legend" style="margin-top:24px;">
+            <span><i style="background:#f59e0b"></i>Super Prem.</span>
+            <span><i style="background:#2563eb"></i>Premium</span>
+            <span><i style="background:#94a3b8"></i>Innoba</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>📈 Evolución Customer Share CP (últimos 4 años)</h3>
+          <div class="line-chart">
+            <div class="y-label" style="top:0;">70%</div>
+            <div class="y-label" style="top:50%;">35%</div>
+            <div class="y-label" style="bottom:0;">0%</div>
+            <svg width="100%" height="100%" viewBox="0 0 400 140" preserveAspectRatio="none" style="position:absolute; inset:0;">
+              <polyline points="0,60 133,50 266,42 400,32" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+              <polyline points="0,88 133,80 266,72 400,62" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+              <polyline points="0,115 133,110 266,105 400,100" fill="none" stroke="#94a3b8" stroke-width="2.5"/>
+              <circle cx="0" cy="60" r="4" fill="#f59e0b"/><circle cx="133" cy="50" r="4" fill="#f59e0b"/><circle cx="266" cy="42" r="4" fill="#f59e0b"/><circle cx="400" cy="32" r="4" fill="#f59e0b"/>
+              <circle cx="0" cy="88" r="4" fill="#2563eb"/><circle cx="133" cy="80" r="4" fill="#2563eb"/><circle cx="266" cy="72" r="4" fill="#2563eb"/><circle cx="400" cy="62" r="4" fill="#2563eb"/>
+              <circle cx="0" cy="115" r="4" fill="#94a3b8"/><circle cx="133" cy="110" r="4" fill="#94a3b8"/><circle cx="266" cy="105" r="4" fill="#94a3b8"/><circle cx="400" cy="100" r="4" fill="#94a3b8"/>
+            </svg>
+            <div class="x-labels"><span>22/23</span><span>23/24</span><span>24/25</span><span>25/26</span></div>
+          </div>
+          <div class="legend" style="margin-top:24px;">
+            <span><i style="background:#f59e0b"></i>Super Prem.</span>
+            <span><i style="background:#2563eb"></i>Premium</span>
+            <span><i style="background:#94a3b8"></i>Innoba</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 4: Scatter | Telaraña -->
+      <div class="grid-2 mb16">
+        <div class="card">
+          <h3>📍 Matriz: Gross Sales vs. Ability to Win</h3>
+          <div class="scatter">
+            <div class="axis-y-label">Gross Sales (USD) ↑</div>
+            <div class="axis-x-label">Ability to Win (Score) →</div>
+            <div class="vline"></div><div class="hline"></div>
+            <div class="quadrant-label" style="top:4px; left:4px;">Defender</div>
+            <div class="quadrant-label" style="top:4px; right:4px; text-align:right;">⭐ Estrellas</div>
+            <div class="quadrant-label" style="bottom:4px; left:4px;">Revisar</div>
+            <div class="quadrant-label" style="bottom:4px; right:4px; text-align:right;">Crecer</div>
+            <div class="dot super" style="left:85%; top:12%;"></div>
+            <div class="dot super" style="left:78%; top:18%;"></div>
+            <div class="dot super" style="left:91%; top:8%;"></div>
+            <div class="dot premium" style="left:72%; top:32%;"></div>
+            <div class="dot premium" style="left:65%; top:40%;"></div>
+            <div class="dot premium" style="left:80%; top:28%;"></div>
+            <div class="dot premium" style="left:55%; top:35%;"></div>
+            <div class="dot regular" style="left:35%; top:62%;"></div>
+            <div class="dot regular" style="left:42%; top:70%;"></div>
+            <div class="dot regular" style="left:28%; top:78%;"></div>
+            <div class="dot regular" style="left:50%; top:58%;"></div>
+            <div class="dot regular" style="left:20%; top:82%;"></div>
+            <div class="dot regular" style="left:75%; top:72%;"></div>
+          </div>
+          <div class="legend" style="margin-top:28px;">
+            <span><i style="background:#94a3b8; border-radius:50%;"></i>Innoba</span>
+            <span><i style="background:#2563eb; border-radius:50%;"></i>Premium</span>
+            <span><i style="background:#f59e0b; border-radius:50%;"></i>Super Premium</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🕸️ Transaccionalidad — Squad vs. Nacional</h3>
+          <p class="subtitle">Promedio del squad comparado con el promedio nacional</p>
+          <div class="spider-container">
+            <svg viewBox="0 0 220 220" width="220" height="220">
+              <!-- grid -->
+              <circle cx="110" cy="110" r="90" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+              <circle cx="110" cy="110" r="60" fill="none" stroke="#e5e7eb" stroke-width="0.7"/>
+              <circle cx="110" cy="110" r="30" fill="none" stroke="#e5e7eb" stroke-width="0.5"/>
+              <!-- axes -->
+              <line x1="110" y1="20" x2="110" y2="200" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="24" y1="82" x2="196" y2="138" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="24" y1="138" x2="196" y2="82" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="55" y1="185" x2="165" y2="35" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="55" y1="35" x2="165" y2="185" stroke="#e5e7eb" stroke-width="0.5"/>
+              <!-- Nacional (red dashed) -->
+              <polygon points="110,38 175,78 165,155 55,155 45,78" class="spider-area-2"/>
+              <!-- Squad (blue solid) -->
+              <polygon points="110,30 185,72 170,162 50,162 38,72" class="spider-area"/>
+              <!-- labels -->
+              <text x="110" y="12" text-anchor="middle" class="spider-label">CS Maíz</text>
+              <text x="205" y="72" text-anchor="start" class="spider-label">CS CP</text>
+              <text x="178" y="172" text-anchor="start" class="spider-label">Digital.</text>
+              <text x="10" y="172" text-anchor="start" class="spider-label">%Seg.</text>
+              <text x="2" y="72" text-anchor="start" class="spider-label">%TopBrand</text>
+            </svg>
+          </div>
+          <div class="legend">
+            <span><i style="background:#2563eb"></i>Squad Norte</span>
+            <span><i style="background:#ef4444"></i>Nacional</span>
+          </div>
+          <table style="margin-top:10px; font-size:11px;">
+            <tr><th>Variable</th><th>Squad</th><th>Nacional</th></tr>
+            <tr><td>CS Maíz</td><td><b>74%</b></td><td>68%</td></tr>
+            <tr><td>CS CP</td><td><b>62%</b></td><td>58%</td></tr>
+            <tr><td>Digitalización</td><td><b>81%</b></td><td>72%</td></tr>
+            <tr><td>% Compra Segmento</td><td><b>68%</b></td><td>65%</td></tr>
+            <tr><td>% Compra Top Brand</td><td><b>55%</b></td><td>52%</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB 2: NEGOCIOS DIGITALES ===================== -->
+    <section class="tab-content hidden">
+      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi purple"><div class="label">Clientes en ≥1 programa</div><div class="value">648</div><div class="delta">52% de la cartera</div></div>
+        <div class="kpi green"><div class="label">Clientes en todos</div><div class="value">124</div><div class="delta">10% de la cartera</div></div>
+        <div class="kpi amber"><div class="label">Sin ningún programa</div><div class="value">592</div><div class="delta" style="color:#f59e0b;">48% oportunidad</div></div>
+        <div class="kpi dark"><div class="label">Programa líder</div><div class="value">FieldView</div><div class="delta">843 clientes</div></div>
+      </div>
+
+      <div class="grid-4 mb16">
+        <div class="prog-card" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">
+          <h4>📱 FieldView</h4>
+          <div class="pct">185k ha</div>
+          <div class="sub">Hectáreas inscriptas</div>
+          <div class="prog-bar-track"><div class="prog-bar-fill" style="width:68%"></div></div>
+          <div class="sub" style="margin-top:4px;">843 / 1.240 clientes (68%)</div>
+        </div>
+        <div class="prog-card" style="background:linear-gradient(135deg,#065f46,#10b981);">
+          <h4>🌱 ProCarbono</h4>
+          <div class="pct">62k ha</div>
+          <div class="sub">Hectáreas inscriptas</div>
+          <div class="prog-bar-track"><div class="prog-bar-fill" style="width:31%"></div></div>
+          <div class="sub" style="margin-top:4px;">384 / 1.240 clientes (31%)</div>
+        </div>
+        <div class="prog-card" style="background:linear-gradient(135deg,#92400e,#f59e0b);">
+          <h4>🌽 DK Integrado</h4>
+          <div class="pct">128k ha</div>
+          <div class="sub">Hectáreas inscriptas</div>
+          <div class="prog-bar-track"><div class="prog-bar-fill" style="width:45%"></div></div>
+          <div class="sub" style="margin-top:4px;">558 / 1.240 clientes (45%)</div>
+        </div>
+        <div class="prog-card" style="background:linear-gradient(135deg,#5b21b6,#8b5cf6);">
+          <h4>🛡️ Garantía Xpro</h4>
+          <div class="pct">142k ha</div>
+          <div class="sub">Hectáreas inscriptas</div>
+          <div class="prog-bar-track"><div class="prog-bar-fill" style="width:52%"></div></div>
+          <div class="sub" style="margin-top:4px;">645 / 1.240 clientes (52%)</div>
+        </div>
+      </div>
+
+      <div class="card mb16">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <h3 style="margin:0;">🔥 Participación en Negocios Digitales por Segmento</h3>
+          <div class="toggle-pills">
+            <button class="pill active" onclick="toggleDigitalView('pct',this)">% Clientes</button>
+            <button class="pill" onclick="toggleDigitalView('ha',this)">Hectáreas</button>
+          </div>
+        </div>
+
+        <div id="digital-pct">
+          <table>
+            <tr><th style="width:140px;">Programa</th><th style="text-align:center;">Innoba</th><th style="text-align:center;">Premium</th><th style="text-align:center;">Super Premium</th><th style="text-align:center;">Total</th></tr>
+            <tr><td><b>📱 FieldView</b></td><td style="text-align:center;"><div style="background:#dbeafe; color:#1e40af; padding:5px; border-radius:4px; font-weight:700;">52%</div></td><td style="text-align:center;"><div style="background:#3b82f6; color:white; padding:5px; border-radius:4px; font-weight:700;">74%</div></td><td style="text-align:center;"><div style="background:#1e3a8a; color:white; padding:5px; border-radius:4px; font-weight:700;">91%</div></td><td style="text-align:center; font-weight:700;">68%</td></tr>
+            <tr><td><b>🌱 ProCarbono</b></td><td style="text-align:center;"><div style="background:#d1fae5; color:#065f46; padding:5px; border-radius:4px; font-weight:700;">18%</div></td><td style="text-align:center;"><div style="background:#6ee7b7; color:#065f46; padding:5px; border-radius:4px; font-weight:700;">35%</div></td><td style="text-align:center;"><div style="background:#10b981; color:white; padding:5px; border-radius:4px; font-weight:700;">58%</div></td><td style="text-align:center; font-weight:700;">31%</td></tr>
+            <tr><td><b>🌽 DK Integrado</b></td><td style="text-align:center;"><div style="background:#fef3c7; color:#92400e; padding:5px; border-radius:4px; font-weight:700;">28%</div></td><td style="text-align:center;"><div style="background:#fbbf24; color:#78350f; padding:5px; border-radius:4px; font-weight:700;">52%</div></td><td style="text-align:center;"><div style="background:#d97706; color:white; padding:5px; border-radius:4px; font-weight:700;">78%</div></td><td style="text-align:center; font-weight:700;">45%</td></tr>
+            <tr><td><b>🛡️ Garantía Xpro</b></td><td style="text-align:center;"><div style="background:#ede9fe; color:#5b21b6; padding:5px; border-radius:4px; font-weight:700;">35%</div></td><td style="text-align:center;"><div style="background:#a78bfa; color:white; padding:5px; border-radius:4px; font-weight:700;">60%</div></td><td style="text-align:center;"><div style="background:#5b21b6; color:white; padding:5px; border-radius:4px; font-weight:700;">82%</div></td><td style="text-align:center; font-weight:700;">52%</td></tr>
+          </table>
+        </div>
+
+        <div id="digital-ha" style="display:none;">
+          <table>
+            <tr><th style="width:140px;">Programa</th><th style="text-align:center;">Innoba</th><th style="text-align:center;">Premium</th><th style="text-align:center;">Super Premium</th><th style="text-align:center;">Total</th></tr>
+            <tr><td><b>📱 FieldView</b></td><td style="text-align:center;"><div style="background:#dbeafe; color:#1e40af; padding:5px; border-radius:4px; font-weight:700;">42k ha</div></td><td style="text-align:center;"><div style="background:#3b82f6; color:white; padding:5px; border-radius:4px; font-weight:700;">72k ha</div></td><td style="text-align:center;"><div style="background:#1e3a8a; color:white; padding:5px; border-radius:4px; font-weight:700;">71k ha</div></td><td style="text-align:center; font-weight:700;">185k ha</td></tr>
+            <tr><td><b>🌱 ProCarbono</b></td><td style="text-align:center;"><div style="background:#d1fae5; color:#065f46; padding:5px; border-radius:4px; font-weight:700;">12k ha</div></td><td style="text-align:center;"><div style="background:#6ee7b7; color:#065f46; padding:5px; border-radius:4px; font-weight:700;">22k ha</div></td><td style="text-align:center;"><div style="background:#10b981; color:white; padding:5px; border-radius:4px; font-weight:700;">28k ha</div></td><td style="text-align:center; font-weight:700;">62k ha</td></tr>
+            <tr><td><b>🌽 DK Integrado</b></td><td style="text-align:center;"><div style="background:#fef3c7; color:#92400e; padding:5px; border-radius:4px; font-weight:700;">28k ha</div></td><td style="text-align:center;"><div style="background:#fbbf24; color:#78350f; padding:5px; border-radius:4px; font-weight:700;">52k ha</div></td><td style="text-align:center;"><div style="background:#d97706; color:white; padding:5px; border-radius:4px; font-weight:700;">48k ha</div></td><td style="text-align:center; font-weight:700;">128k ha</td></tr>
+            <tr><td><b>🛡️ Garantía Xpro</b></td><td style="text-align:center;"><div style="background:#ede9fe; color:#5b21b6; padding:5px; border-radius:4px; font-weight:700;">32k ha</div></td><td style="text-align:center;"><div style="background:#a78bfa; color:white; padding:5px; border-radius:4px; font-weight:700;">55k ha</div></td><td style="text-align:center;"><div style="background:#5b21b6; color:white; padding:5px; border-radius:4px; font-weight:700;">55k ha</div></td><td style="text-align:center; font-weight:700;">142k ha</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Buscador de Oportunidades Digitales</h3>
+        <p class="subtitle">Seleccioná un programa y encontrá los clientes prioritarios que aún no participan</p>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+          <select class="opp-select" onchange="filterOpportunity(this.value)">
+            <option value="">— Seleccioná un negocio digital —</option>
+            <option value="fv">📱 FieldView</option>
+            <option value="pc">🌱 ProCarbono</option>
+            <option value="dk">🌽 DK Integrado</option>
+            <option value="gx">🛡️ Garantía Xpro</option>
+          </select>
+          <div id="opp-summary" style="font-size:12px; color:#6b7280;"></div>
+        </div>
+        <div id="opp-placeholder" style="text-align:center; padding:30px; color:#9ca3af; font-size:14px;">👆 Seleccioná un programa para ver oportunidades</div>
+        <div id="opp-table" style="display:none;">
+          <table>
+            <tr><th>Rank</th><th>Cliente</th><th>Canal Actual</th><th>Canal Futuro</th><th>AtW</th><th>Potencial</th><th>GS</th><th>Vendedor</th><th>Programas actuales</th></tr>
+            <tr><td>#1</td><td>CAMPOS DEL SUR</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td>8.5 🟢</td><td>$78k</td><td>$30k</td><td>R. Gómez</td><td><span class="badge digital">GX</span> <span class="badge digital">DK</span></td></tr>
+            <tr><td>#2</td><td>LOS TRES OMBÚES</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td>8.3 🟢</td><td>$71k</td><td>$25k</td><td>M. López</td><td><span class="badge digital">GX</span></td></tr>
+            <tr><td>#3</td><td>EL HORIZONTE</td><td><span class="badge premium">Premium</span></td><td><span class="badge premium">Premium</span></td><td>8.0 🟢</td><td>$80k</td><td>$38k</td><td>L. Fernández</td><td><span class="badge digital">DK</span></td></tr>
+            <tr><td>#4</td><td>SANTA CLARA SA</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td>7.5 🟡</td><td>$60k</td><td>$22k</td><td>A. Martín</td><td>—</td></tr>
+          </table>
+          <p style="font-size:11px; color:#6b7280; margin-top:8px;">📌 Solo clientes que <b>no participan</b> en el programa seleccionado, ordenados por ranking de priorización.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB 3: MIGRACIÓN & PRIORIZACIÓN ===================== -->
+    <section class="tab-content hidden">
+      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="kpi gold" style="padding:12px;">
+          <div class="label" style="font-weight:700;">Super Premium</div>
+          <div class="movs"><div><span class="up">↑ 38</span><small>Sube</small></div><div><span class="down">↓ 12</span><small>Baja</small></div><div><span class="same">→ 198</span><small>Mantiene</small></div></div>
+        </div>
+        <div class="kpi" style="border-left-color:#2563eb; padding:12px;">
+          <div class="label" style="font-weight:700;">Premium</div>
+          <div class="movs"><div><span class="up">↑ 92</span><small>Sube</small></div><div><span class="down">↓ 23</span><small>Baja</small></div><div><span class="same">→ 319</span><small>Mantiene</small></div></div>
+        </div>
+        <div class="kpi silver" style="padding:12px;">
+          <div class="label" style="font-weight:700;">Innoba</div>
+          <div class="movs"><div><span class="up">↑ 54</span><small>Sube</small></div><div><span class="down">↓ 12</span><small>Salen</small></div><div><span class="same">→ 492</span><small>Mantiene</small></div></div>
+        </div>
+        <div class="kpi amber" style="padding:12px;">
+          <div class="label">Cupos Disponibles</div>
+          <div class="value">42</div>
+        </div>
+      </div>
+
+      <div class="card mb16">
+        <h3>Flujo de Migración</h3>
+        <div style="height:200px; position:relative; background:linear-gradient(to right,#f9fafb,white); border-radius:6px; padding:16px;">
+          <div style="position:absolute; top:16px; bottom:16px; left:16px; width:100px; display:flex; flex-direction:column; justify-content:space-around;">
+            <div style="padding:7px; border-radius:4px; background:#94a3b8; color:white; font-size:11px; text-align:center; font-weight:600;">Innoba<br>558</div>
+            <div style="padding:7px; border-radius:4px; background:#2563eb; color:white; font-size:11px; text-align:center; font-weight:600;">Premium<br>434</div>
+            <div style="padding:7px; border-radius:4px; background:#f59e0b; color:white; font-size:11px; text-align:center; font-weight:600;">Super P.<br>248</div>
+          </div>
+          <svg style="position:absolute; left:120px; right:120px; top:0; bottom:0; width:calc(100% - 240px); height:100%;" preserveAspectRatio="none" viewBox="0 0 100 100">
+            <path d="M0,15 C50,15 50,15 100,15" stroke="#94a3b8" stroke-width="6" fill="none" opacity="0.5"/>
+            <path d="M0,15 C50,15 50,50 100,50" stroke="#94a3b8" stroke-width="4" fill="none" opacity="0.6"/>
+            <path d="M0,50 C50,50 50,50 100,50" stroke="#2563eb" stroke-width="8" fill="none" opacity="0.5"/>
+            <path d="M0,50 C50,50 50,85 100,85" stroke="#2563eb" stroke-width="3" fill="none" opacity="0.6"/>
+            <path d="M0,85 C50,85 50,85 100,85" stroke="#f59e0b" stroke-width="6" fill="none" opacity="0.5"/>
+          </svg>
+          <div style="position:absolute; top:16px; bottom:16px; right:16px; width:100px; display:flex; flex-direction:column; justify-content:space-around;">
+            <div style="padding:7px; border-radius:4px; background:#94a3b8; color:white; font-size:11px; text-align:center; font-weight:600;">Innoba<br>490</div>
+            <div style="padding:7px; border-radius:4px; background:#2563eb; color:white; font-size:11px; text-align:center; font-weight:600;">Premium<br>520</div>
+            <div style="padding:7px; border-radius:4px; background:#f59e0b; color:white; font-size:11px; text-align:center; font-weight:600;">Super P.<br>230</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <h3 style="margin:0;">Ranking de Priorización</h3>
+          <div class="toggle-pills">
+            <button class="pill active" onclick="filterRanking('premium',this)">🔵 Premium</button>
+            <button class="pill" onclick="filterRanking('super',this)">🟡 Super Premium</button>
+          </div>
+        </div>
+
+        <div id="rank-premium">
+          <p style="font-size:12px; color:#6b7280; margin-bottom:10px;">📌 30 cupos · 42 candidatos</p>
+          <div style="overflow-x:auto;">
+          <table>
+            <tr><th>#</th><th>Cliente</th><th>Distribuidor</th><th>Canal Act.</th><th>Canal Fut.</th><th>Acción</th><th>AtW</th><th>Squad Act.</th><th>Squad Fut.</th><th>GS 25</th><th>GS25>90k</th><th>GS 26</th><th>Trans.</th><th>Vendedor</th></tr>
+            <tr><td>1</td><td>EST. LA PALOMA</td><td>ACA</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge alta">⬆ ALTA</span></td><td>9.2</td><td>Norte</td><td>Norte</td><td>$85k</td><td>❌</td><td>$42k</td><td>✅</td><td>J. Pérez</td></tr>
+            <tr><td>2</td><td>LA ESPERANZA SA</td><td>Syngenta Dist.</td><td><span class="badge premium">Premium</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge mantener">= MANTENER</span></td><td>8.7</td><td>Centro</td><td>Centro</td><td>$92k</td><td>✅</td><td>$70k</td><td>✅</td><td>J. Pérez</td></tr>
+            <tr><td>3</td><td>CAMPOS DEL SUR</td><td>Agroserv</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge alta">⬆ ALTA</span></td><td>8.5</td><td>Sur</td><td>Sur</td><td>$78k</td><td>❌</td><td>$30k</td><td>✅</td><td>R. Gómez</td></tr>
+            <tr><td>4</td><td>LOS TRES OMBÚES</td><td>ACA</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge alta">⬆ ALTA</span></td><td>8.3</td><td>Litoral</td><td>Norte</td><td>$71k</td><td>❌</td><td>$25k</td><td>❌</td><td>M. López</td></tr>
+            <tr><td>5</td><td>DON FRANCISCO</td><td>Profértil</td><td><span class="badge premium">Premium</span></td><td><span class="badge regular">Innoba</span></td><td><span class="badge baja">⬇ BAJA</span></td><td>4.2</td><td>Sur</td><td>Sur</td><td>$45k</td><td>❌</td><td>$48k</td><td>❌</td><td>R. Gómez</td></tr>
+          </table>
+          </div>
+        </div>
+
+        <div id="rank-super" style="display:none;">
+          <p style="font-size:12px; color:#6b7280; margin-bottom:10px;">📌 15 cupos · 22 candidatos</p>
+          <div style="overflow-x:auto;">
+          <table>
+            <tr><th>#</th><th>Cliente</th><th>Distribuidor</th><th>Canal Act.</th><th>Canal Fut.</th><th>Acción</th><th>AtW</th><th>Squad Act.</th><th>Squad Fut.</th><th>GS 25</th><th>GS25>90k</th><th>GS 26</th><th>Trans.</th><th>Vendedor</th></tr>
+            <tr><td>1</td><td>AGRO DON JUAN</td><td>ACA</td><td><span class="badge premium">Premium</span></td><td><span class="badge super">Super P.</span></td><td><span class="badge alta">⬆ ALTA</span></td><td>9.5</td><td>Norte</td><td>Norte</td><td>$120k</td><td>✅</td><td>$60k</td><td>✅</td><td>M. López</td></tr>
+            <tr><td>2</td><td>LA RURAL HNOS</td><td>Syngenta Dist.</td><td><span class="badge super">Super P.</span></td><td><span class="badge super">Super P.</span></td><td><span class="badge mantener">= MANTENER</span></td><td>9.3</td><td>Norte</td><td>Norte</td><td>$140k</td><td>✅</td><td>$125k</td><td>✅</td><td>J. Pérez</td></tr>
+            <tr><td>3</td><td>EL POTRERO SA</td><td>Agroserv</td><td><span class="badge premium">Premium</span></td><td><span class="badge super">Super P.</span></td><td><span class="badge alta">⬆ ALTA</span></td><td>9.1</td><td>Centro</td><td>Centro</td><td>$110k</td><td>✅</td><td>$70k</td><td>✅</td><td>R. Gómez</td></tr>
+            <tr><td>4</td><td>LAS ACACIAS</td><td>Profértil</td><td><span class="badge super">Super P.</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge baja">⬇ BAJA</span></td><td>5.1</td><td>Centro</td><td>Centro</td><td>$85k</td><td>❌</td><td>$95k</td><td>❌</td><td>L. Fernández</td></tr>
+          </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB 4: VISTA CLIENTE 360° ===================== -->
+    <section class="tab-content hidden">
+      <div class="card mb16">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="font-size:16px; margin-bottom:4px;">EST. LA PALOMA SA</h3>
+            <div style="font-size:12px; color:#6b7280;">CUIT 30-12345678-9 · Zona Norte · Vendedor: J. Pérez · Distribuidor: ACA</div>
+          </div>
+          <input type="text" placeholder="🔍 Buscar otro cliente..." style="padding:8px; border:1px solid #d1d5db; border-radius:4px; width:260px;">
+        </div>
+      </div>
+
+      <div class="kpi-row" style="grid-template-columns:repeat(6,1fr);">
+        <div class="kpi"><div class="label">Canal Actual</div><div class="value" style="font-size:13px;"><span class="badge regular">Innoba</span></div></div>
+        <div class="kpi green"><div class="label">Canal Futuro</div><div class="value" style="font-size:13px;"><span class="badge premium">Premium ↑</span></div></div>
+        <div class="kpi purple"><div class="label">Clasificación AtW</div><div class="value" style="font-size:13px;"><span class="badge desarr">Desarrollado</span></div></div>
+        <div class="kpi amber"><div class="label">Ranking Squad</div><div class="value">#1</div></div>
+        <div class="kpi dark"><div class="label">Ranking Nacional</div><div class="value">#14</div></div>
+        <div class="kpi"><div class="label">Potencial</div><div class="value">$95k</div></div>
+      </div>
+
+      <div class="grid-2 mb16">
+        <div class="card">
+          <h3>🕸️ Ability to Win — Cliente vs. Squad</h3>
+          <div class="spider-container">
+            <svg viewBox="0 0 220 220" width="220" height="220">
+              <circle cx="110" cy="110" r="90" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+              <circle cx="110" cy="110" r="60" fill="none" stroke="#e5e7eb" stroke-width="0.7"/>
+              <circle cx="110" cy="110" r="30" fill="none" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="110" y1="20" x2="110" y2="200" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="24" y1="82" x2="196" y2="138" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="24" y1="138" x2="196" y2="82" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="55" y1="185" x2="165" y2="35" stroke="#e5e7eb" stroke-width="0.5"/>
+              <line x1="55" y1="35" x2="165" y2="185" stroke="#e5e7eb" stroke-width="0.5"/>
+              <!-- Squad avg (green dashed) -->
+              <polygon points="110,38 175,78 165,155 55,155 45,78" class="spider-area-3"/>
+              <!-- Cliente (blue solid) -->
+              <polygon points="110,25 190,68 172,168 48,165 35,70" class="spider-area"/>
+              <text x="110" y="12" text-anchor="middle" class="spider-label">CS Maíz</text>
+              <text x="205" y="72" text-anchor="start" class="spider-label">CS CP</text>
+              <text x="178" y="172" text-anchor="start" class="spider-label">Digital.</text>
+              <text x="10" y="172" text-anchor="start" class="spider-label">%Seg.</text>
+              <text x="2" y="72" text-anchor="start" class="spider-label">%TopBrand</text>
+            </svg>
+          </div>
+          <div class="legend">
+            <span><i style="background:#2563eb"></i>Cliente</span>
+            <span><i style="background:#10b981"></i>Squad Norte</span>
+          </div>
+          <table style="margin-top:10px; font-size:11px;">
+            <tr><th>Variable</th><th>Cliente</th><th>Squad</th></tr>
+            <tr><td>CS Maíz</td><td><b>78%</b></td><td>74%</td></tr>
+            <tr><td>CS CP</td><td><b>65%</b></td><td>62%</td></tr>
+            <tr><td>Digitalización</td><td><b>90%</b></td><td>81%</td></tr>
+            <tr><td>% Compra Segmento</td><td><b>72%</b></td><td>68%</td></tr>
+            <tr><td>% Compra Top Brand</td><td><b>68%</b></td><td>55%</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>📈 Evolución Maíz (bolsas) y CP (USD) — últimos 4 años</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+            <div>
+              <div style="font-size:11px; font-weight:600; color:#374151; margin-bottom:4px;">🌽 Maíz (bolsas)</div>
+              <div style="display:flex; align-items:flex-end; gap:4px; height:80px; border-bottom:1px solid #e5e7eb;">
+                <div style="flex:1; height:40%; background:#94a3b8; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:55%; background:#94a3b8; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:70%; background:#2563eb; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:85%; background:#10b981; border-radius:2px 2px 0 0;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9px; color:#6b7280; margin-top:2px;"><span>22/23</span><span>23/24</span><span>24/25</span><span>25/26</span></div>
+            </div>
+            <div>
+              <div style="font-size:11px; font-weight:600; color:#374151; margin-bottom:4px;">🌿 CP (USD)</div>
+              <div style="display:flex; align-items:flex-end; gap:4px; height:80px; border-bottom:1px solid #e5e7eb;">
+                <div style="flex:1; height:35%; background:#94a3b8; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:50%; background:#94a3b8; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:68%; background:#2563eb; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:90%; background:#10b981; border-radius:2px 2px 0 0;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9px; color:#6b7280; margin-top:2px;"><span>22/23</span><span>23/24</span><span>24/25</span><span>25/26</span></div>
+            </div>
+          </div>
+
+          <h3>📈 Evolución CS Maíz y CS CP — últimos 4 años</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+            <div>
+              <div style="font-size:10px; color:#6b7280; margin-bottom:4px;">CS Maíz</div>
+              <div style="display:flex; align-items:flex-end; gap:4px; height:60px; border-bottom:1px solid #e5e7eb;">
+                <div style="flex:1; height:50%; background:#3b82f6; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:60%; background:#3b82f6; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:72%; background:#3b82f6; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:85%; background:#2563eb; border-radius:2px 2px 0 0;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:8px; color:#6b7280; margin-top:2px;"><span>22/23</span><span>23/24</span><span>24/25</span><span>25/26</span></div>
+            </div>
+            <div>
+              <div style="font-size:10px; color:#6b7280; margin-bottom:4px;">CS CP</div>
+              <div style="display:flex; align-items:flex-end; gap:4px; height:60px; border-bottom:1px solid #e5e7eb;">
+                <div style="flex:1; height:42%; background:#3b82f6; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:52%; background:#3b82f6; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:60%; background:#3b82f6; border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1; height:75%; background:#2563eb; border-radius:2px 2px 0 0;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:8px; color:#6b7280; margin-top:2px;"><span>22/23</span><span>23/24</span><span>24/25</span><span>25/26</span></div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:14px;">🌐 Programas Digitales</h3>
+          <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:8px;">
+            <div style="background:#ede9fe; border-radius:6px; padding:8px; display:flex; justify-content:space-between; align-items:center;">
+              <div><span style="font-size:11px; font-weight:600; color:#5b21b6;">📱 FieldView</span><span class="badge digital" style="margin-left:6px;">✅</span></div>
+              <div style="font-size:11px; font-weight:700; color:#5b21b6;">420 ha</div>
+            </div>
+            <div style="background:#fee2e2; border-radius:6px; padding:8px; display:flex; justify-content:space-between; align-items:center;">
+              <div><span style="font-size:11px; font-weight:600; color:#991b1b;">🌱 ProCarbono</span><span class="badge" style="background:#fee2e2; color:#991b1b; margin-left:6px;">❌</span></div>
+              <div style="font-size:11px; color:#991b1b;">—</div>
+            </div>
+            <div style="background:#ede9fe; border-radius:6px; padding:8px; display:flex; justify-content:space-between; align-items:center;">
+              <div><span style="font-size:11px; font-weight:600; color:#5b21b6;">🌽 DK Integrado</span><span class="badge digital" style="margin-left:6px;">✅</span></div>
+              <div style="font-size:11px; font-weight:700; color:#5b21b6;">380 ha</div>
+            </div>
+            <div style="background:#fee2e2; border-radius:6px; padding:8px; display:flex; justify-content:space-between; align-items:center;">
+              <div><span style="font-size:11px; font-weight:600; color:#991b1b;">🛡️ Garantía Xpro</span><span class="badge" style="background:#fee2e2; color:#991b1b; margin-left:6px;">❌</span></div>
+              <div style="font-size:11px; color:#991b1b;">—</div>
+            </div>
+          </div>
+
+          <div class="recommendation">✅ <b>Recomendación:</b> Mover a <b>Premium</b> (ALTA). Oportunidad digital: incorporar a <b>ProCarbono</b> y <b>Garantía Xpro</b>.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB 5: TABLA CRUDA ===================== -->
+    <section class="tab-content hidden">
+      <div class="card">
+        <div class="search-bar">
+          <input type="text" placeholder="🔍 Buscar por ID, nombre o CUIT...">
+          <button class="btn">Aplicar Filtros</button>
+          <button class="btn green">⬇ Exportar a Excel</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <tr>
+              <th>ID</th><th>Cliente</th><th>Distrib.</th><th>Zona</th><th>Vendedor</th>
+              <th>Canal Act.</th><th>Canal Fut.</th><th>Acción</th><th>AtW</th><th>Clasif.</th>
+              <th>CSS</th><th>MS Maíz</th><th>MS CP</th>
+              <th>GS 25</th><th>>90k</th><th>GS 26</th><th>Potencial</th>
+              <th>FV</th><th>PC</th><th>DK</th><th>GX</th>
+            </tr>
+            <tr><td>C0001</td><td>EST. LA PALOMA</td><td>ACA</td><td>Norte</td><td>J. Pérez</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge alta">ALTA</span></td><td>9.2</td><td><span class="badge desarr">Desarr.</span></td><td>78%</td><td>54%</td><td>46%</td><td>$85k</td><td>❌</td><td>$42k</td><td>$95k</td><td>✅</td><td>❌</td><td>✅</td><td>❌</td></tr>
+            <tr><td>C0002</td><td>AGRO DON JUAN</td><td>ACA</td><td>Norte</td><td>M. López</td><td><span class="badge premium">Premium</span></td><td><span class="badge super">Super P.</span></td><td><span class="badge alta">ALTA</span></td><td>9.5</td><td><span class="badge desarr">Desarr.</span></td><td>85%</td><td>62%</td><td>52%</td><td>$120k</td><td>✅</td><td>$60k</td><td>$120k</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            <tr><td>C0003</td><td>LA ESPERANZA SA</td><td>Syng.</td><td>Centro</td><td>J. Pérez</td><td><span class="badge premium">Premium</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge mantener">MANT.</span></td><td>8.7</td><td><span class="badge desarr">Desarr.</span></td><td>70%</td><td>38%</td><td>32%</td><td>$92k</td><td>✅</td><td>$70k</td><td>$82k</td><td>✅</td><td>❌</td><td>✅</td><td>✅</td></tr>
+            <tr><td>C0004</td><td>CAMPOS DEL SUR</td><td>Agroserv</td><td>Sur</td><td>R. Gómez</td><td><span class="badge regular">Innoba</span></td><td><span class="badge premium">Premium</span></td><td><span class="badge alta">ALTA</span></td><td>8.5</td><td><span class="badge adesarr">A desarr.</span></td><td>62%</td><td>30%</td><td>24%</td><td>$78k</td><td>❌</td><td>$30k</td><td>$78k</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td></tr>
+            <tr><td>C0005</td><td>DON FRANCISCO</td><td>Profértil</td><td>Sur</td><td>R. Gómez</td><td><span class="badge premium">Premium</span></td><td><span class="badge regular">Innoba</span></td><td><span class="badge baja">BAJA</span></td><td>4.2</td><td><span class="badge trans">Trans.</span></td><td>32%</td><td>18%</td><td>14%</td><td>$45k</td><td>❌</td><td>$48k</td><td>$45k</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td></tr>
+          </table>
+        </div>
+        <div style="text-align:center; margin-top:12px; font-size:12px; color:#6b7280;">Mostrando 5 de 1.240 registros · ‹ 1 2 3 ... 248 ›</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function showTab(idx, el){
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach((c, i) => { c.classList.toggle('hidden', i !== idx); });
+  }
+  function filterRanking(type, el){
+    document.querySelectorAll('#rank-premium, #rank-super').forEach(d => d.style.display = 'none');
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById(type === 'premium' ? 'rank-premium' : 'rank-super').style.display = 'block';
+  }
+  function toggleDigitalView(type, el){
+    document.querySelectorAll('.pill').forEach(p => { if(el.parentNode.contains(p)) p.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('digital-pct').style.display = type === 'pct' ? 'block' : 'none';
+    document.getElementById('digital-ha').style.display = type === 'ha' ? 'block' : 'none';
+  }
+  function filterOpportunity(val){
+    const ph = document.getElementById('opp-placeholder');
+    const tb = document.getElementById('opp-table');
+    const sm = document.getElementById('opp-summary');
+    const d = { fv:{name:'FieldView',out:397}, pc:{name:'ProCarbono',out:856}, dk:{name:'DK Integrado',out:682}, gx:{name:'Garantía Xpro',out:595} };
+    if(!val){ ph.style.display='block'; tb.style.display='none'; sm.innerHTML=''; return; }
+    ph.style.display='none'; tb.style.display='block';
+    sm.innerHTML=`<b style="color:#1e3a8a;">${d[val].name}</b>: <b>${d[val].out}</b> clientes sin programa · Top por ranking`;
+  }
+</script>
+</body>
+</html>
